@@ -1,0 +1,2 @@
+SSID = "jaleckmichamArsch"
+PASSWORD = "6177872598290689"

@@ -1,0 +1,29 @@
+<!DOCTYPE html>
+<html lang="de">
+	<head>
+	    <meta charset="utf-8">
+	    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+	    <title>BuMm-Control</title>
+	</head>
+	<body>
+		<h1>BuMm-Control</h1>
+        <form>
+            <h2>BuMmS</h2>
+            (Bjoern und Maltes multifunktionale Steckdose)<br>
+            <label>
+                <input type="checkbox" name="pin0"<!--VAR/pin0_checked--> onchange="form.submit()">
+                Pin 0
+            </label>
+            <h2>BuMmeL</h2>
+            (Bjoern und Maltes multifunktionale, elektronische Lampe)<br>
+            <label>
+                <input type="range" name="pin1" min="0" max="1023" value="<!--VAR/pin1_value-->" onchange="form.submit()">
+                Pin 1
+            </label>
+            <label>
+                <input type="color" name="rgb" value="<!--VAR/rgb_value-->" onchange="form.submit()">
+                Pin 5, 6, 7
+	    	</label>
+        </form>
+	</body>
+</html>
