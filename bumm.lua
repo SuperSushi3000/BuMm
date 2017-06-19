@@ -9,10 +9,10 @@ gpio.mode(5, gpio.OUTPUT)
 pwm.setup(5, 100, 0)
 pwm.start(5)
 gpio.mode(6, gpio.OUTPUT)
-pwm.setup(6, 100, 512)
+pwm.setup(6, 100, 0)
 pwm.start(6)
 gpio.mode(7, gpio.OUTPUT)
-pwm.setup(7, 100, 512)
+pwm.setup(7, 100, 0)
 pwm.start(7)
 
 pin1_value = 0
@@ -56,19 +56,18 @@ function on_receive(socket, data)
   
     if(values.pin1)then
         pin1_value = values.pin1
-        pwm.setduty(1, pin1_value)
+        pwm.setduty(1, tonumber(pin1_value))
     end
 
     if(values.rgb)then
         rgb_value = "#"..values.rgb
         local color = tonumber(values.rgb, 16)
         --set red pwm duty cycle
-        print(1023-bit.lshift(bit.band(color, 0xFF0000),2))
-        --pwm.setduty(6, )
+        pwm.setduty(6, 1023-bit.rshift(bit.band(color, 0xFF0000),14))
         --set green pwm duty cycle
-        --pwm.setduty(5, 1023-bit.lshift(bit.band(color, 0x00FF00),2))
+        pwm.setduty(5, 1023-bit.rshift(bit.band(color, 0x00FF00),6))
         --set blue pwm duty cycle
-        --pwm.setduty(7, 1023-bit.lshift(bit.band(color, 0x0000FF),2))
+        pwm.setduty(7, 1023-bit.lshift(bit.band(color, 0x0000FF),2))
     end
 
     local buffer = file_str
