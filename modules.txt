@@ -1,0 +1,2 @@
+Modules used in the current firmware build(19.06.2017):
+bit, enduser_setup, file, gpio, http, net, node, pwm, sjson, struct, tmr, uart, websocket, wifi
