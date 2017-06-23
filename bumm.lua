@@ -1,13 +1,35 @@
 dofile("bumm_objects.lua")
+
+--Load elements from JSON file
+file.open("/FLASH/config.json")
+file_str = file.read()
+file.close()
+
+local json_table = sjson.decode(file_str)
+
 elements = {}
-elements[1] = switch:new{index = 1, pin = 0}
-elements[2] = switch:new{index = 2, pin = 1}
-elements[3] = fader:new{index = 1, pin = 2}
-elements[4] = rgb:new{index = 1, pins={r=6, g=5, b=7}}
- 
+--add switches
+for switch_ in list_iter(json_table.switches) do
+  table.insert(elements, switch:new{index = switch_.index, pin = tonumber(switch_.pin)})
+end
+--add faders
+for fader_ in list_iter(json_table.faders) do
+  table.insert(elements, fader:new{index = fader_.index, pin = tonumber(fader_.pin)})
+end
+--add rgbs
+for rgb_ in list_iter(json_table.rgbs) do
+  table.insert(elements, rgb:new{index = rgb_.index,
+                                 pins = 
+                                 {r=tonumber(rgb_.pin_r), 
+                                  g=tonumber(rgb_.pin_g), 
+                                  b=tonumber(rgb_.pin_b)}})
+end
+
+--Load HTML page representing GUI 
 file.open("/FLASH/BuMmControl.html")
 file_str = file.read()
 file.close()
+
 
 server = net.createServer(net.TCP)
 

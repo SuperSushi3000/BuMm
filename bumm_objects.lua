@@ -44,8 +44,7 @@ end
 switch = element:new{name="switch", pins={0}}
 
 function switch:new(tb)
-  --print(tb.index)
-  --print(tb.pin)
+  print("Adding Switch with index:"..tb.index..", switching Pin:"..tb.pin.."\n")
   new_switch_object = element:new{name="switch/"..tb.index, pins={tb.pin}}
   setmetatable(new_switch_object, self)
   self.__index = self
@@ -78,6 +77,7 @@ end
 fader = element:new{name="fader", pins={0}}
 
 function fader:new(tb)
+  print("Adding Fader with index:"..tb.index..", PWM-ing Pin:"..tb.pin.."\n")
   new_fader_object = element:new{name="fader/"..tb.index, pins={tb.pin}}
   new_fader_object.value = 0
   pwm.setup(tb.pin, 100, 0)
@@ -107,6 +107,7 @@ end
 rgb = element:new{name="rgb", pins={0, 1, 2}}
 
 function rgb:new(tb)
+  print("Adding RGB LED with index:"..tb.index..",\nred: Pin "..tb.pins.r..",\ngreen: Pin "..tb.pins.g..",\nblue: Pin "..tb.pins.b.."\n")
   new_rgb_object = element:new{name="rgb/"..tb.index, pins={tb.pins.r, tb.pins.g, tb.pins.b}}
   new_rgb_object.value = "#000000"
   pwm.setup(tb.pins.r, 100, 0)
