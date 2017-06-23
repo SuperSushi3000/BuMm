@@ -1,7 +1,9 @@
 dofile("bumm_objects.lua")
 elements = {}
-elements[1] = switch:new(0, 0)
-
+elements[1] = switch:new{index = 1, pin = 0}
+elements[2] = switch:new{index = 2, pin = 1}
+elements[3] = fader:new{index = 1, pin = 2}
+ 
 file.open("/FLASH/BuMmControl.html")
 file_str = file.read()
 file.close()
@@ -10,8 +12,9 @@ server = net.createServer(net.TCP)
 
 function on_receive(socket, data)
     print(data)
-    --remove lattenzaun because it begins with %(escape symbol)
-    data = string.gsub(data, "%%23", "")
+    --substitute html character codes by their appropriate characters
+    data = string.gsub(data, "%%23", "#")
+    data = string.gsub(data, "%%2F", "/")
     --parse for header with pattern GET /?key=value HTTP
     local _, _, method, path, vars = string.find(data, "([A-Z]+) (.+)?(.+) HTTP")
     if(method == nil) then
@@ -23,13 +26,19 @@ function on_receive(socket, data)
     
     local values = {}
     if(vars ~= nil)then
-        for k, v in string.gmatch(vars, "(%w+)=(%w+)&*") do
+        --print(vars)
+        for k, v in string.gmatch(vars, "(%w+/%d+)=(%w+)&*") do
                 values[k] = v
+                print(k..": "..v..", ")
         end
     end
+    
     local control_elements = ""
-    for _, element in pairs(elements)do
-      element:set_value(vars[element:get_key()])
+    for element in list_iter(elements)do
+      if(vars ~= nil) then
+        --print(values[element:get_key()])
+        element:set_value(values[element:get_key()])
+      end
       control_elements = control_elements..element:get_control_str()
     end
     
