@@ -103,6 +103,45 @@ function fader:get_control_str()
 end
 
 
+--rgb object prototype, derived from element
+rgb = element:new{name="rgb", pins={0, 1, 2}}
+
+function rgb:new(tb)
+  new_rgb_object = element:new{name="rgb/"..tb.index, pins={tb.pins.r, tb.pins.g, tb.pins.b}}
+  new_rgb_object.value = "#000000"
+  pwm.setup(tb.pins.r, 100, 0)
+  pwm.start(tb.pins.r)
+  pwm.setup(tb.pins.g, 100, 0)
+  pwm.start(tb.pins.g)
+  pwm.setup(tb.pins.b, 100, 0)
+  pwm.start(tb.pins.b)
+  setmetatable(new_rgb_object, self)
+  self.__index = self
+  return new_rgb_object
+end
+
+function rgb:set_value(value)
+  --print("fader:set_value")
+  if(value)then
+    self.value = value
+    local color = tonumber(string.gsub(value,"#",""),16)
+    --set red pwm duty cycle
+    pwm.setduty(self.pins[1], 1023-bit.rshift(bit.band(color, 0xFF0000),14))
+    --set green pwm duty cycle
+    pwm.setduty(self.pins[2], 1023-bit.rshift(bit.band(color, 0x00FF00),6))
+    --set blue pwm duty cycle
+    pwm.setduty(self.pins[3], 1023-bit.lshift(bit.band(color, 0x0000FF),2))
+  end
+end
+
+function rgb:get_control_str()
+  return[[<label>
+                <input type="color" name="]]..self.name..[[" value="]]..self.value..[[" onchange="form.submit()">
+                ]]..self.name..[[<br>
+          </label>]].."\n"
+end
+
+
 
 
 

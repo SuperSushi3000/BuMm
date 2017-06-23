@@ -3,6 +3,7 @@ elements = {}
 elements[1] = switch:new{index = 1, pin = 0}
 elements[2] = switch:new{index = 2, pin = 1}
 elements[3] = fader:new{index = 1, pin = 2}
+elements[4] = rgb:new{index = 1, pins={r=6, g=5, b=7}}
  
 file.open("/FLASH/BuMmControl.html")
 file_str = file.read()
@@ -27,7 +28,7 @@ function on_receive(socket, data)
     local values = {}
     if(vars ~= nil)then
         --print(vars)
-        for k, v in string.gmatch(vars, "(%w+/%d+)=(%w+)&*") do
+        for k, v in string.gmatch(vars, "(%w+/%d+)=(#?%w+)&*") do
                 values[k] = v
                 print(k..": "..v..", ")
         end
