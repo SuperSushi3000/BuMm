@@ -1,23 +1,10 @@
-gpio.mode(0, gpio.OUTPUT)
-gpio.write(0, gpio.LOW)
-gpio.mode(1, gpio.OUTPUT)
-pwm.setup(1, 100, 0)
-pwm.start(1)
-
---RGB LED, 5=green, 6=red, 7=blue
-gpio.mode(5, gpio.OUTPUT)
-pwm.setup(5, 100, 0)
-pwm.start(5)
-gpio.mode(6, gpio.OUTPUT)
-pwm.setup(6, 100, 0)
-pwm.start(6)
-gpio.mode(7, gpio.OUTPUT)
-pwm.setup(7, 100, 0)
-pwm.start(7)
-
-pin1_value = 0
-rgb_value = "#FFFFFF"
-
+dofile("bumm_objects.lua")
+elements = {}
+elements[1] = switch:new{index = 1, pin = 0}
+elements[2] = switch:new{index = 2, pin = 1}
+elements[3] = fader:new{index = 1, pin = 2}
+elements[4] = rgb:new{index = 1, pins={r=6, g=5, b=7}}
+ 
 file.open("/FLASH/BuMmControl.html")
 file_str = file.read()
 file.close()
@@ -26,8 +13,9 @@ server = net.createServer(net.TCP)
 
 function on_receive(socket, data)
     print(data)
-    --remove lattenzaun because it begins with %(escape symbol)
-    data = string.gsub(data, "%%23", "")
+    --substitute html character codes by their appropriate characters
+    data = string.gsub(data, "%%23", "#")
+    data = string.gsub(data, "%%2F", "/")
     --parse for header with pattern GET /?key=value HTTP
     local _, _, method, path, vars = string.find(data, "([A-Z]+) (.+)?(.+) HTTP")
     if(method == nil) then
@@ -39,41 +27,25 @@ function on_receive(socket, data)
     
     local values = {}
     if(vars ~= nil)then
-        for k, v in string.gmatch(vars, "(%w+)=(%w+)&*") do
+        --print(vars)
+        for k, v in string.gmatch(vars, "(%w+/%d+)=(#?%w+)&*") do
                 values[k] = v
+                print(k..": "..v..", ")
         end
     end
-
-    local pin0_checked = ""
     
-    if(values.pin0 == "on")then
-        gpio.write(0, gpio.HIGH)
-        pin0_checked = " checked=\"checked\""--nice to read, isn't it?
-    elseif(values_changed) then
-        gpio.write(0, gpio.LOW)
+    local control_elements = ""
+    for element in list_iter(elements)do
+      if(vars ~= nil) then
+        --print(values[element:get_key()])
+        element:set_value(values[element:get_key()])
+      end
+      control_elements = control_elements..element:get_control_str()
     end
-
-  
-    if(values.pin1)then
-        pin1_value = values.pin1
-        pwm.setduty(1, tonumber(pin1_value))
-    end
-
-    if(values.rgb)then
-        rgb_value = "#"..values.rgb
-        local color = tonumber(values.rgb, 16)
-        --set red pwm duty cycle
-        pwm.setduty(6, 1023-bit.rshift(bit.band(color, 0xFF0000),14))
-        --set green pwm duty cycle
-        pwm.setduty(5, 1023-bit.rshift(bit.band(color, 0x00FF00),6))
-        --set blue pwm duty cycle
-        pwm.setduty(7, 1023-bit.lshift(bit.band(color, 0x0000FF),2))
-    end
-
+    
     local buffer = file_str
-    buffer = string.gsub(buffer, "<!%-%-VAR/pin0_checked%-%->", pin0_checked)
-    buffer = string.gsub(buffer, "<!%-%-VAR/pin1_value%-%->", pin1_value)
-    buffer = string.gsub(buffer, "<!%-%-VAR/rgb_value%-%->", rgb_value)
+    buffer = string.gsub(buffer, "<!%-%-CONTROL_ELEMENTS%-%->", control_elements)
+   
     socket:send(buffer)
 end
 
