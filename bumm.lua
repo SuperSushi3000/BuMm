@@ -27,9 +27,16 @@ end
 
 --Load HTML page representing GUI 
 file.open("/FLASH/BuMmControl.html")
-file_str = file.read()
+html_str = file.read()
 file.close()
 
+--Load style sheet
+file.open("/FLASH/bumm.css")
+local style_str = file.read()
+file.close()
+
+--put style sheet into html string
+html_str = string.gsub(html_str, "<!%-%-STYLESHEET%-%->", style_str)
 
 server = net.createServer(net.TCP)
 
@@ -65,7 +72,7 @@ function on_receive(socket, data)
       control_elements = control_elements..element:get_control_str()
     end
     
-    local buffer = file_str
+    local buffer = html_str
     buffer = string.gsub(buffer, "<!%-%-CONTROL_ELEMENTS%-%->", control_elements)
    
     socket:send(buffer)
