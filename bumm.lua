@@ -1,5 +1,5 @@
 dofile("bumm_objects.lua")
-
+dofile("http_srv.lua")
 --Load elements from JSON file
 file.open("/FLASH/config.json")
 file_str = file.read()
@@ -30,52 +30,28 @@ file.open("/FLASH/BuMmControl.html")
 html_str = file.read()
 file.close()
 
---Load style sheet
-file.open("/FLASH/bumm.css")
-local style_str = file.read()
-file.close()
-
---put style sheet into html string
-html_str = string.gsub(html_str, "<!%-%-STYLESHEET%-%->", style_str)
-
 server = net.createServer(net.TCP)
 
+
+function index_page(values)
+  local control_elements = ""
+  for element in list_iter(elements)do
+    if(values[element:get_key()]) then
+      element:set_value(values[element:get_key()])
+    end
+    control_elements = control_elements..element:get_control_str()
+  end
+  return string.gsub(html_str, "<!%-%-CONTROL_ELEMENTS%-%->", control_elements)
+end
+
 function on_receive(socket, data)
-    print(data)
-    --substitute html character codes by their appropriate characters
-    data = string.gsub(data, "%%23", "#")
-    data = string.gsub(data, "%%2F", "/")
-    --parse for header with pattern GET /?key=value HTTP
-    local _, _, method, path, vars = string.find(data, "([A-Z]+) (.+)?(.+) HTTP")
-    if(method == nil) then
-        --if failed, parse for GET /? HTTP
-        _, _, method, path = string.find(data, "([A-Z]+) (.+)?.HTTP")
+    srv = http_srv:new{callback_index = index_page}
+    srv:handle_request(data)
+    local buffer = srv:get_response()
+    --if there is something to send, send it
+    if buffer and buffer ~= "" then
+      socket:send(buffer)
     end
-    --if both attempts to parse failed, there is no change to the values of interest
-    local values_changed = not(method == nil)
-    
-    local values = {}
-    if(vars ~= nil)then
-        --print(vars)
-        for k, v in string.gmatch(vars, "(%w+/%d+)=(#?%w+)&*") do
-                values[k] = v
-                print(k..": "..v..", ")
-        end
-    end
-    
-    local control_elements = ""
-    for element in list_iter(elements)do
-      if(vars ~= nil) then
-        --print(values[element:get_key()])
-        element:set_value(values[element:get_key()])
-      end
-      control_elements = control_elements..element:get_control_str()
-    end
-    
-    local buffer = html_str
-    buffer = string.gsub(buffer, "<!%-%-CONTROL_ELEMENTS%-%->", control_elements)
-   
-    socket:send(buffer)
 end
 
 function on_sent(socket)
